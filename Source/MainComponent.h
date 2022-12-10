@@ -33,7 +33,7 @@ public:
     void loadDefaultSound ();
     void openButtonClicked ();
     void panning(float position);
-    float sineWaveLFO(float position);
+    void sineWaveLFO(float position);
 
     /** Init grainStartSample and grainStopSample when a file is loaded.
 
@@ -93,8 +93,8 @@ private:
     };
 
     struct SineWave {
-        float sampleRate = 1;
         float currentAngle = 0;
+        float value;
     };
 
     juce::TextButton   loadButton { "Open..." };

@@ -52,7 +52,7 @@ MainComponent::MainComponent()
     grainDurationFeedbackLabel.setText("Duration", juce::dontSendNotification);
     titleLabel.setText("Granular Synthesis Panner", juce::dontSendNotification);
     textPannerLabel.setText("Left      .      .      .      .      .      .      .      Right", juce::dontSendNotification);
-    lfoModeLabel.setText("MODES :", juce::dontSendNotification);
+    lfoModeLabel.setText("LFO MODES :", juce::dontSendNotification);
 
     titleLabel.setFont(juce::Font(20.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, juce::Colours::darkorange);
@@ -170,15 +170,13 @@ void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& buffe
     // return from the function if there's nothing in our buffer
     if (fileBuffer.getNumSamples() == 0) return;
 
+    if (!isSliderOn) panning(0);
     if (isSliderOn) panning(stereoFrame.position);
- 
-    if (isSinus);
     
     for (int sample = 0; sample < numSamplesInBlock; ++sample) 
     {     
         const float* fileData;
-        float* channelData;    
-
+        float* channelData;
 
         for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel) 
         {
@@ -218,9 +216,12 @@ float degreesToRadians(float degs) noexcept {
 
 void MainComponent::panning(float position)
 {
-    if (isSinus) position = sineWaveLFO(position);
+    if (isSinus) {
+        sineWaveLFO(position);
+        position = sineWave.value;
+    }
 
-    position /= 100;
+    if(!isSinus) position /= 100;
     
     double theta = position * 45.0;
     theta = degreesToRadians(theta);
@@ -231,18 +232,15 @@ void MainComponent::panning(float position)
     //DBG(stereoFrame.leftSample << "   " << stereoFrame.rightSample);
 }
 
-float MainComponent::sineWaveLFO(float position)
+void MainComponent::sineWaveLFO(float position)
 {
     float cyclesPerSample, currentSample, angleDelta;
 
-    cyclesPerSample = position / sineWave.sampleRate;
+    cyclesPerSample = samplingRate;
     angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
 
     sineWave.currentAngle += angleDelta;
-    currentSample = position*(float)std::sin(sineWave.currentAngle);
-
-    DBG(currentSample);
-    return currentSample;
+    sineWave.value = (float)std::sin(sineWave.currentAngle);
 }
 
 void MainComponent::releaseResources()
@@ -366,11 +364,11 @@ void MainComponent::resized()
         300,
         20);
 
-    lfoModeLabel.setBounds(stereoSlider.getBounds().getBottomLeft().getX(),
+    lfoModeLabel.setBounds(stereoSlider.getBounds().getBottomLeft().getX()-20,
         stereoSlider.getBounds().getBottomLeft().getY() + 10,
-        50,
+        120,
         20);
-    sinusButton.setBounds(lfoModeLabel.getBounds().getTopRight().getX()+10,
+    sinusButton.setBounds(lfoModeLabel.getBounds().getTopRight().getX()+30,
         lfoModeLabel.getBounds().getTopRight().getY(),
         300,
         20);
